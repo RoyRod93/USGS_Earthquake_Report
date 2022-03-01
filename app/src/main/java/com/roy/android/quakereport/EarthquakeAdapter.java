@@ -1,4 +1,4 @@
-package com.example.android.quakereport;
+package com.roy.android.quakereport;
 
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
@@ -12,10 +12,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
+import com.example.android.quakereport.R;
+
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class EarthquakeAdapter extends ArrayAdapter<Earthquake> {
     public static final String LOCATION_SEPERATOR = " of ";
@@ -82,13 +85,13 @@ public class EarthquakeAdapter extends ArrayAdapter<Earthquake> {
 
     @NonNull
     private String formatDate(Date dateObject) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("LLL dd, yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("LLL dd, yyyy", Locale.US);
         return dateFormat.format(dateObject);
     }
 
     @NonNull
     private String formatTime(Date dateObject) {
-        SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm a");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm a", Locale.US);
         return timeFormat.format(dateObject);
     }
 

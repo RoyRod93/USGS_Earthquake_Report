@@ -1,4 +1,4 @@
-package com.example.android.quakereport;
+package com.roy.android.quakereport;
 
 public class Earthquake {
     private final double mMagnitude;
