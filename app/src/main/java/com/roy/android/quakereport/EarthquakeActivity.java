@@ -24,16 +24,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EarthquakeActivity extends AppCompatActivity implements LoaderCallbacks<List<Earthquake>> {
+public class EarthquakeActivity extends AppCompatActivity implements LoaderCallbacks<List<Earthquake>>,
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final String LOG_TAG = EarthquakeActivity.class.getName();
     private static final String USGS_REQUEST_URL =
-            "https://earthquake.usgs.gov/fdsnws/event/1/query?";
+            "https://earthquake.usgs.gov/fdsnws/event/1/query";
 //    ?format=geojson&orderby=time&minmag=5&limit=50
 
     private static EarthquakeAdapter mAdapter;
+    private static ProgressBar mLoadingSpinner;
     private TextView mEmptyStateTextView;
-    private ProgressBar mLoadingSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,11 +50,17 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
         mLoadingSpinner = findViewById(R.id.loadingSpinner);
 
         // Create a new adapter that takes an empty list of earthquakes as input
-        mAdapter = new EarthquakeAdapter(this, new ArrayList<Earthquake>());
+        mAdapter = new EarthquakeAdapter(this, new ArrayList<>());
 
         // Set the adapter on the {@link ListView}
         // so the list can be populated in the user interface
         earthquakeListView.setAdapter(mAdapter);
+
+        // Obtain a reference to the SharedPreferences file for this app
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        // And register to be notified of preference changes
+        // So we know when the user has adjusted the query settings
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
         // Set an item click listener on the ListView, which sends an intent to a web browser
         // to open a website with more information about the selected earthquake.
@@ -110,12 +117,14 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
 
     @Override
     public void onLoadFinished(@NonNull Loader<List<Earthquake>> loader, List<Earthquake> earthquakes) {
+        // Hide loading indicator because the data has been loaded
         mLoadingSpinner.setVisibility(View.GONE);
 
+        // Set empty state text to display "No earthquakes found."
         mEmptyStateTextView.setText(R.string.no_earthquakes);
 
         // Clear the adapter of previous earthquake data
-        mAdapter.clear();
+//        mAdapter.clear();
 
         // If there is a valid list of {@link Earthquake}s, then add them to the adapter's
         // data set. This will trigger the ListView to update.
@@ -127,6 +136,7 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
 
     @Override
     public void onLoaderReset(@NonNull Loader<List<Earthquake>> loader) {
+        // Loader reset, so we can clear out our existing data.
         mAdapter.clear();
     }
 
@@ -145,5 +155,23 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(getString(R.string.settings_min_magnitude_key)) ||
+                key.equals(getString(R.string.settings_order_by_key))) {
+            // Clear the ListView as a new query will be kicked off
+            mAdapter.clear();
+
+            // Hide the empty state text view as the loading indicator will be displayed
+            mEmptyStateTextView.setVisibility(View.GONE);
+
+            // Show the loading indicator while new data is being fetched
+            mLoadingSpinner.setVisibility(View.VISIBLE);
+
+            getLoaderManager().restartLoader(0, null, this);
+        }
+
     }
 }
